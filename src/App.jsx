@@ -1,8 +1,9 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import Login from './pages/Login';
-import MangaList from './pages/MangaList';
-import MangaDetail from './pages/MangaDetail';
+import Dashboard from './pages/Dashboard';
+import MangaList from './pages/manga/MangaList';
+import MangaDetail from './pages/manga/MangaDetail';
 import { useContext } from 'react';
 import AuthContext from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
@@ -11,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css';
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
   
-  if (loading) return null; // Or a spinner
+  if (loading) return null; 
   
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -27,7 +28,16 @@ function App() {
       <main>
         <Routes>
           <Route path="/login" element={<Login />} />
+          
+          {/* Main Dashboard */}
           <Route path="/" element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          } />
+
+          {/* Manga Module */}
+          <Route path="/manga" element={
             <ProtectedRoute>
               <MangaList />
             </ProtectedRoute>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Table, Button, Container, Row, Col, Modal, Form, ProgressBar, Alert } from 'react-bootstrap';
 import { FaTrash, FaArrowLeft, FaEdit } from 'react-icons/fa';
-import api from '../utils/api';
+import api from '../../utils/api';
 import { toast } from 'react-toastify';
 
 const MangaDetail = () => {

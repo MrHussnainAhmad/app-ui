@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Container, Row, Col, Modal, Form } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import { FaEdit, FaTrash, FaPlus, FaEye } from 'react-icons/fa';
-import api from '../utils/api';
+import api from '../../utils/api';
 import { toast } from 'react-toastify';
 
 const MangaList = () => {
