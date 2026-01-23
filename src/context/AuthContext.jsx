@@ -7,6 +7,9 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Use environment variable or fallback to localhost
+  const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/p/manga';
+
   useEffect(() => {
     const userInfo = localStorage.getItem('userInfo');
     if (userInfo) {
@@ -17,9 +20,15 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-        // Assume API URL, we'll set it in utils/api.js later or env
-        // Using hardcoded for now or relative
-        const { data } = await axios.post('https://app-backend-alpha.vercel.app/p/manga/auth/login', {
+        // Construct the full URL using the base variable
+        // Remove '/p/manga' from BASE_URL if it's already there to avoid duplication if we weren't careful, 
+        // but here our BASE_URL includes /p/manga, so we append /auth/login relative to that structure?
+        // Wait, the routes are:
+        // App: /p/manga/auth/login
+        // Base: http://localhost:5000/p/manga
+        // So we need: BASE_URL + '/auth/login'
+        
+        const { data } = await axios.post(`${BASE_URL}/auth/login`, {
           username,
           password,
         });
