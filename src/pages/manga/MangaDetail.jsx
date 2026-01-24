@@ -201,11 +201,15 @@ const MangaDetail = () => {
                       <td>{chapter.title}</td>
                       <td>{chapter.contentType}</td>
                       <td>{chapter.files?.length || 0}</td>
-                      <td>{chapter.isPublished ? 'Yes' : 'No'}</td>
                       <td>
-                          {chapter.releaseDate 
-                            ? new Date(chapter.releaseDate).toLocaleString() 
-                            : (chapter.isPublished ? 'Now' : 'N/A')}
+                          {chapter.isPublished && (chapter.releaseDate && new Date(chapter.releaseDate) <= new Date()) ? 'Yes' : 'No'}
+                      </td>
+                      <td>
+                          {chapter.isPublished && (chapter.releaseDate && new Date(chapter.releaseDate) <= new Date())
+                            ? 'Now'
+                            : (chapter.releaseDate && new Date(chapter.releaseDate) > new Date()
+                                ? new Date(chapter.releaseDate).toLocaleString()
+                                : 'N/A')}
                       </td>
                       <td>
                           <Button variant="warning" size="sm" className="me-2" onClick={() => handleShowEdit(chapter)}>
