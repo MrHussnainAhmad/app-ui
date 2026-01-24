@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Card, Button, Container, Row, Col, Modal, Form, Spinner } from 'react-bootstrap';
+import { Card, Button, Container, Row, Col, Modal, Form, Spinner, ButtonGroup } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaLightbulb, FaQuestionCircle } from 'react-icons/fa';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 
@@ -78,17 +78,31 @@ const MangaList = () => {
 
   return (
     <Container className="py-4">
+      {/* Header & Actions */}
       <Row className="mb-4 align-items-center">
-        <Col>
+        <Col md={6}>
           <h1>Manga Library</h1>
         </Col>
-        <Col className="text-end">
-          <Button onClick={() => setShow(true)} size="lg">
-            <FaPlus /> Add New Manga
-          </Button>
+        <Col md={6} className="text-end">
+            <ButtonGroup className="me-2">
+                <LinkContainer to="/manga/suggestions">
+                    <Button variant="outline-warning">
+                        <FaLightbulb /> Suggestions
+                    </Button>
+                </LinkContainer>
+                <LinkContainer to="/manga/requests">
+                    <Button variant="outline-info">
+                        <FaQuestionCircle /> Requests
+                    </Button>
+                </LinkContainer>
+            </ButtonGroup>
+            <Button onClick={() => setShow(true)} variant="primary">
+                <FaPlus /> Add New
+            </Button>
         </Col>
       </Row>
 
+      {/* List */}
       {loading ? (
           <div className="text-center py-5"><Spinner animation="border" /></div>
       ) : (
@@ -127,6 +141,7 @@ const MangaList = () => {
           </Row>
       )}
 
+      {/* Create Modal */}
       <Modal show={show} onHide={handleClose} backdrop="static">
         <Modal.Header closeButton={!submitting}>
           <Modal.Title>Create New Manga</Modal.Title>
