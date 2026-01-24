@@ -51,17 +51,13 @@ const MangaDetail = () => {
     setPublishOption('none');
   };
 
-  const handleShowCreate = () => {
-      setEditMode(false);
-      setShow(true);
-  };
-
   const handleShowEdit = (chapter) => {
       setEditMode(true);
       setSelectedChapterId(chapter._id);
       setTitle(chapter.title);
       setChapterNumber(chapter.chapterNumber || '');
       
+      // Determine selected option for the radio buttons
       if (chapter.isPublished) {
           setPublishOption('now');
       } else if (chapter.releaseDate && new Date(chapter.releaseDate) > new Date()) {
@@ -133,8 +129,9 @@ const MangaDetail = () => {
             chapterNumber,
             pageCount,
             files: uploadedFilesData.length > 0 ? uploadedFilesData : undefined,
-            isPublished: publishOption === 'now', 
-            scheduleForLater: publishOption === 'scheduled'
+            // Ensure boolean and string conversion for backend
+            isPublished: publishOption === 'now' ? 'true' : 'false', 
+            scheduleForLater: publishOption === 'scheduled' ? 'true' : 'false'
         };
 
         if (editMode) {
@@ -195,32 +192,34 @@ const MangaDetail = () => {
               </tr>
           </thead>
           <tbody>
-              {chapters.map(chapter => (
-                  <tr key={chapter._id}>
-                      <td>{chapter.chapterNumber}</td>
-                      <td>{chapter.title}</td>
-                      <td>{chapter.contentType}</td>
-                      <td>{chapter.files?.length || 0}</td>
-                      <td>
-                          {chapter.isPublished && (chapter.releaseDate && new Date(chapter.releaseDate) <= new Date()) ? 'Yes' : 'No'}
-                      </td>
-                      <td>
-                          {chapter.isPublished && (chapter.releaseDate && new Date(chapter.releaseDate) <= new Date())
-                            ? 'Now'
-                            : (chapter.releaseDate && new Date(chapter.releaseDate) > new Date()
-                                ? new Date(chapter.releaseDate).toLocaleString()
-                                : 'N/A')}
-                      </td>
-                      <td>
-                          <Button variant="warning" size="sm" className="me-2" onClick={() => handleShowEdit(chapter)}>
-                              <FaEdit />
-                          </Button>
-                          <Button variant="danger" size="sm" onClick={() => handleDelete(chapter._id)}>
-                              <FaTrash />
-                          </Button>
-                      </td>
-                  </tr>
-              ))}
+              {chapters.map(chapter => {
+                  const isTrulyPublished = chapter.isPublished && (chapter.releaseDate && new Date(chapter.releaseDate) <= new Date());
+                  let releaseDateDisplay = 'N/A';
+                  if (chapter.isPublished) {
+                      releaseDateDisplay = 'Now';
+                  } else if (chapter.releaseDate && new Date(chapter.releaseDate) > new Date()) {
+                      releaseDateDisplay = new Date(chapter.releaseDate).toLocaleString();
+                  }
+
+                  return (
+                      <tr key={chapter._id}>
+                          <td>{chapter.chapterNumber}</td>
+                          <td>{chapter.title}</td>
+                          <td>{chapter.contentType}</td>
+                          <td>{chapter.files?.length || 0}</td>
+                          <td>{isTrulyPublished ? 'Yes' : 'No'}</td>
+                          <td>{releaseDateDisplay}</td>
+                          <td>
+                              <Button variant="warning" size="sm" className="me-2" onClick={() => handleShowEdit(chapter)}>
+                                  <FaEdit />
+                              </Button>
+                              <Button variant="danger" size="sm" onClick={() => handleDelete(chapter._id)}>
+                                  <FaTrash />
+                              </Button>
+                          </td>
+                      </tr>
+                  );
+              })}
               {chapters.length === 0 && <tr><td colSpan="7" className="text-center">No chapters found</td></tr>}
           </tbody>
       </Table>
