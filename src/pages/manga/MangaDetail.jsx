@@ -22,14 +22,16 @@ const MangaDetail = () => {
   const [files, setFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [isPublished, setIsPublished] = useState(false); // New: Publish Now
+  const [scheduleForLater, setScheduleForLater] = useState(false); // New: Schedule for 5 AM PKT
 
   const fetchData = async () => {
     try {
-      const mangaRes = await api.get(`/manga/${id}`);
+      const mangaRes = await api.get(`/${id}`);
       setManga(mangaRes.data);
       
       // Admin sees ALL chapters
-      const chaptersRes = await api.get(`/manga/${id}/chapters/all`);
+      const chaptersRes = await api.get(`/${id}/chapters/all`);
       setChapters(chaptersRes.data);
     } catch (error) {
       toast.error('Error fetching data');
@@ -48,6 +50,8 @@ const MangaDetail = () => {
     setFiles([]);
     setUploadProgress(0);
     setUploading(false);
+    setIsPublished(false);
+    setScheduleForLater(false);
   };
 
   const handleShowCreate = () => {
@@ -60,6 +64,8 @@ const MangaDetail = () => {
       setSelectedChapterId(chapter._id);
       setTitle(chapter.title);
       setChapterNumber(chapter.chapterNumber || '');
+      setIsPublished(!!chapter.isPublished || (!!chapter.releaseDate && new Date(chapter.releaseDate) <= new Date()));
+      setScheduleForLater(!!chapter.releaseDate && !chapter.isPublished && new Date(chapter.releaseDate) > new Date());
       setShow(true);
   };
 
@@ -73,7 +79,6 @@ const MangaDetail = () => {
       formData.append('api_key', signatureData.apiKey);
       formData.append('timestamp', signatureData.timestamp);
       formData.append('signature', signatureData.signature);
-      // Skip folder to avoid signature issues on client upload
       
       const url = `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`;
       
@@ -85,7 +90,7 @@ const MangaDetail = () => {
           originalName: file.name,
           mimetype: file.type,
           size: file.size,
-          pages: data.pages, // Capture page count if PDF
+          pages: data.pages, 
           index: index
       };
   };
@@ -110,7 +115,7 @@ const MangaDetail = () => {
 
             const uploadPromises = files.map(async (file, index) => {
                 const result = await uploadToCloudinary(file, signatureData, '', index);
-                if (result.pages && result.pages > 0) pageCount = result.pages; // Store if PDF
+                if (result.pages && result.pages > 0) pageCount = result.pages; 
                 completed++;
                 setUploadProgress(Math.round((completed / totalFiles) * 100));
                 return result;
@@ -124,7 +129,9 @@ const MangaDetail = () => {
             title,
             chapterNumber,
             pageCount,
-            files: uploadedFilesData.length > 0 ? uploadedFilesData : undefined // Only send if new files
+            files: uploadedFilesData.length > 0 ? uploadedFilesData : undefined,
+            isPublished, // Send new status
+            scheduleForLater // Send schedule option
         };
 
         if (editMode) {
@@ -179,6 +186,8 @@ const MangaDetail = () => {
                   <th>Title</th>
                   <th>Type</th>
                   <th>Files</th>
+                  <th>Published</th>
+                  <th>Release Date</th>
                   <th>Actions</th>
               </tr>
           </thead>
@@ -189,6 +198,8 @@ const MangaDetail = () => {
                       <td>{chapter.title}</td>
                       <td>{chapter.contentType}</td>
                       <td>{chapter.files?.length || 0}</td>
+                      <td>{chapter.isPublished ? 'Yes' : 'No'}</td>
+                      <td>{chapter.releaseDate ? new Date(chapter.releaseDate).toLocaleString() : 'N/A'}</td>
                       <td>
                           <Button variant="warning" size="sm" className="me-2" onClick={() => handleShowEdit(chapter)}>
                               <FaEdit />
@@ -199,7 +210,7 @@ const MangaDetail = () => {
                       </td>
                   </tr>
               ))}
-              {chapters.length === 0 && <tr><td colSpan="5" className="text-center">No chapters found</td></tr>}
+              {chapters.length === 0 && <tr><td colSpan="7" className="text-center">No chapters found</td></tr>}
           </tbody>
       </Table>
 
@@ -242,6 +253,33 @@ const MangaDetail = () => {
                     {editMode ? 'Uploading new files will replace existing content.' : 'Select one PDF or multiple images.'}
                 </Form.Text>
             </Form.Group>
+
+            <Form.Group className="mb-3">
+                <Form.Check 
+                    type="checkbox"
+                    label="Publish Immediately"
+                    checked={isPublished}
+                    onChange={(e) => {
+                        setIsPublished(e.target.checked);
+                        if (e.target.checked) setScheduleForLater(false); // Can't schedule if immediate
+                    }}
+                    disabled={uploading}
+                />
+                 <Form.Check 
+                    type="checkbox"
+                    label="Schedule for next 5 AM PKT"
+                    checked={scheduleForLater}
+                    onChange={(e) => {
+                        setScheduleForLater(e.target.checked);
+                        if (e.target.checked) setIsPublished(false); // Can't be immediate if scheduled
+                    }}
+                    disabled={uploading || isPublished} // Disable if already publishing immediately
+                />
+                <Form.Text className="text-muted">
+                    If neither is selected, chapter will be unpublished.
+                </Form.Text>
+            </Form.Group>
+
 
             {uploading && (
                 <div className="mt-3">
