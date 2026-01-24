@@ -51,12 +51,12 @@ function App() {
           } />
 
           {/* Interaction Module */}
-          <Route path="/suggestions" element={
+          <Route path="/manga/suggestions" element={
             <ProtectedRoute>
               <SuggestionList />
             </ProtectedRoute>
           } />
-          <Route path="/requests" element={
+          <Route path="/manga/requests" element={
             <ProtectedRoute>
               <RequestList />
             </ProtectedRoute>

@@ -10,7 +10,7 @@ const SuggestionList = () => {
 
   const fetchSuggestions = async () => {
     try {
-      const { data } = await api.get('/interactions/suggestions');
+      const { data } = await api.get('/manga/interactions/suggestions');
       setSuggestions(data);
     } catch (error) {
       toast.error('Error fetching suggestions');
@@ -26,7 +26,7 @@ const SuggestionList = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Delete this suggestion?')) {
       try {
-        await api.delete(`/interactions/suggestions/${id}`);
+        await api.delete(`/manga/interactions/suggestions/${id}`);
         toast.success('Deleted');
         fetchSuggestions();
       } catch (error) {

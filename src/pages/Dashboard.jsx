@@ -32,7 +32,7 @@ const Dashboard = () => {
               <Card.Text>
                 View manga suggested by users.
               </Card.Text>
-              <LinkContainer to="/suggestions">
+              <LinkContainer to="/manga/suggestions">
                 <Button variant="warning" className="text-white">View Suggestions</Button>
               </LinkContainer>
             </Card.Body>
@@ -48,7 +48,7 @@ const Dashboard = () => {
               <Card.Text>
                 View specific manga requests.
               </Card.Text>
-              <LinkContainer to="/requests">
+              <LinkContainer to="/manga/requests">
                 <Button variant="info" className="text-white">View Requests</Button>
               </LinkContainer>
             </Card.Body>
