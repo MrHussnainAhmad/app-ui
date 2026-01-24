@@ -22,15 +22,14 @@ const MangaDetail = () => {
   const [files, setFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [isPublished, setIsPublished] = useState(false); 
-  const [scheduleForLater, setScheduleForLater] = useState(false);
+  const [publishOption, setPublishOption] = useState('none'); // 'now', 'scheduled', 'none'
 
   const fetchData = async () => {
     try {
-      const mangaRes = await api.get(`/manga/${id}`); // FIX: Added /manga prefix
+      const mangaRes = await api.get(`/manga/${id}`); 
       setManga(mangaRes.data);
       
-      const chaptersRes = await api.get(`/manga/${id}/chapters/all`); // FIX: Added /manga prefix
+      const chaptersRes = await api.get(`/manga/${id}/chapters/all`); 
       setChapters(chaptersRes.data);
     } catch (error) {
       toast.error('Error fetching data');
@@ -49,8 +48,7 @@ const MangaDetail = () => {
     setFiles([]);
     setUploadProgress(0);
     setUploading(false);
-    setIsPublished(false);
-    setScheduleForLater(false);
+    setPublishOption('none');
   };
 
   const handleShowCreate = () => {
@@ -63,8 +61,14 @@ const MangaDetail = () => {
       setSelectedChapterId(chapter._id);
       setTitle(chapter.title);
       setChapterNumber(chapter.chapterNumber || '');
-      setIsPublished(!!chapter.isPublished || (!!chapter.releaseDate && new Date(chapter.releaseDate) <= new Date()));
-      setScheduleForLater(!!chapter.releaseDate && !chapter.isPublished && new Date(chapter.releaseDate) > new Date());
+      
+      if (chapter.isPublished) {
+          setPublishOption('now');
+      } else if (chapter.releaseDate && new Date(chapter.releaseDate) > new Date()) {
+          setPublishOption('scheduled');
+      } else {
+          setPublishOption('none');
+      }
       setShow(true);
   };
 
@@ -129,15 +133,15 @@ const MangaDetail = () => {
             chapterNumber,
             pageCount,
             files: uploadedFilesData.length > 0 ? uploadedFilesData : undefined,
-            isPublished, 
-            scheduleForLater 
+            isPublished: publishOption === 'now', 
+            scheduleForLater: publishOption === 'scheduled'
         };
 
         if (editMode) {
-            await api.put(`/manga/chapter/${selectedChapterId}`, payload); // FIX: Added /manga prefix
+            await api.put(`/manga/chapter/${selectedChapterId}`, payload); 
             toast.success('Chapter updated');
         } else {
-            await api.post(`/manga/${id}/chapter`, payload); // FIX: Added /manga prefix
+            await api.post(`/manga/${id}/chapter`, payload); 
             toast.success('Chapter created');
         }
 
@@ -153,7 +157,7 @@ const MangaDetail = () => {
   const handleDelete = async (chapterId) => {
       if (window.confirm('Delete this chapter?')) {
           try {
-              await api.delete(`/manga/chapter/${chapterId}`); // FIX: Added /manga prefix
+              await api.delete(`/manga/chapter/${chapterId}`); 
               toast.success('Chapter deleted');
               fetchData();
           } catch (error) {
@@ -198,7 +202,11 @@ const MangaDetail = () => {
                       <td>{chapter.contentType}</td>
                       <td>{chapter.files?.length || 0}</td>
                       <td>{chapter.isPublished ? 'Yes' : 'No'}</td>
-                      <td>{chapter.releaseDate ? new Date(chapter.releaseDate).toLocaleString() : 'N/A'}</td>
+                      <td>
+                          {chapter.releaseDate 
+                            ? new Date(chapter.releaseDate).toLocaleString() 
+                            : (chapter.isPublished ? 'Now' : 'N/A')}
+                      </td>
                       <td>
                           <Button variant="warning" size="sm" className="me-2" onClick={() => handleShowEdit(chapter)}>
                               <FaEdit />
@@ -254,28 +262,39 @@ const MangaDetail = () => {
             </Form.Group>
 
             <Form.Group className="mb-3">
+                <Form.Label>Publishing Options</Form.Label>
                 <Form.Check 
-                    type="checkbox"
+                    type="radio"
+                    name="publishOption"
+                    id="publishNow"
                     label="Publish Immediately"
-                    checked={isPublished}
-                    onChange={(e) => {
-                        setIsPublished(e.target.checked);
-                        if (e.target.checked) setScheduleForLater(false); 
-                    }}
+                    value="now"
+                    checked={publishOption === 'now'}
+                    onChange={(e) => setPublishOption(e.target.value)}
                     disabled={uploading}
                 />
-                 <Form.Check 
-                    type="checkbox"
+                <Form.Check 
+                    type="radio"
+                    name="publishOption"
+                    id="scheduleForLater"
                     label="Schedule for next 5 AM PKT"
-                    checked={scheduleForLater}
-                    onChange={(e) => {
-                        setScheduleForLater(e.target.checked);
-                        if (e.target.checked) setIsPublished(false); 
-                    }}
-                    disabled={uploading || isPublished} 
+                    value="scheduled"
+                    checked={publishOption === 'scheduled'}
+                    onChange={(e) => setPublishOption(e.target.value)}
+                    disabled={uploading}
+                />
+                <Form.Check 
+                    type="radio"
+                    name="publishOption"
+                    id="doNotPublish"
+                    label="Do Not Publish (Draft)"
+                    value="none"
+                    checked={publishOption === 'none'}
+                    onChange={(e) => setPublishOption(e.target.value)}
+                    disabled={uploading}
                 />
                 <Form.Text className="text-muted">
-                    If neither is selected, chapter will be unpublished.
+                    Select how and when this chapter should be released.
                 </Form.Text>
             </Form.Group>
 
