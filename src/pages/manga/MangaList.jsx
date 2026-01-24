@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Card, Button, Container, Row, Col, Modal, Form, Spinner, ButtonGroup } from 'react-bootstrap';
+import { Card, Button, Container, Row, Col, Modal, Form, Spinner, ButtonGroup, InputGroup } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import { FaPlus, FaLightbulb, FaQuestionCircle } from 'react-icons/fa';
 import api from '../../utils/api';
@@ -8,18 +8,36 @@ import { toast } from 'react-toastify';
 const MangaList = () => {
   const [mangas, setMangas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [genresList, setGenresList] = useState([]);
+  const [selectedGenre, setSelectedGenre] = useState('');
   
   // Modal State
   const [show, setShow] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [genres, setGenres] = useState('');
   const [coverFile, setCoverFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetchGenres();
+    fetchMangas();
+  }, [selectedGenre]); // Refetch when filter changes
+
+  const fetchGenres = async () => {
+      try {
+          const { data } = await api.get('/manga/genres');
+          setGenresList(data);
+      } catch (error) {
+          console.error(error);
+      }
+  };
 
   const fetchMangas = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/manga');
+      const url = selectedGenre ? `/manga?genre=${encodeURIComponent(selectedGenre)}` : '/manga';
+      const { data } = await api.get(url);
       setMangas(data);
     } catch (error) {
       toast.error('Error fetching mangas');
@@ -28,14 +46,11 @@ const MangaList = () => {
     }
   };
 
-  useEffect(() => {
-    fetchMangas();
-  }, []);
-
   const handleClose = () => {
       setShow(false);
       setTitle('');
       setDescription('');
+      setGenres('');
       setCoverFile(null);
       setSubmitting(false);
   };
@@ -47,6 +62,7 @@ const MangaList = () => {
     const formData = new FormData();
     formData.append('title', title);
     formData.append('description', description);
+    formData.append('genres', genres);
     if (coverFile) {
         formData.append('coverImage', coverFile);
     }
@@ -58,6 +74,7 @@ const MangaList = () => {
       toast.success('Manga created');
       handleClose();
       fetchMangas();
+      fetchGenres(); // Update list if new genre added
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error creating manga');
       setSubmitting(false);
@@ -80,23 +97,34 @@ const MangaList = () => {
     <Container className="py-4">
       {/* Header & Actions */}
       <Row className="mb-4 align-items-center">
-        <Col md={6}>
+        <Col md={4}>
           <h1>Manga Library</h1>
         </Col>
-        <Col md={6} className="text-end">
+        <Col md={4}>
+            <Form.Select 
+                value={selectedGenre} 
+                onChange={(e) => setSelectedGenre(e.target.value)}
+            >
+                <option value="">All Genres</option>
+                {genresList.map(g => (
+                    <option key={g} value={g}>{g}</option>
+                ))}
+            </Form.Select>
+        </Col>
+        <Col md={4} className="text-end">
             <ButtonGroup className="me-2">
                 <LinkContainer to="/manga/suggestions">
-                    <Button variant="outline-warning">
+                    <Button variant="outline-warning" size="sm">
                         <FaLightbulb /> Suggestions
                     </Button>
                 </LinkContainer>
                 <LinkContainer to="/manga/requests">
-                    <Button variant="outline-info">
+                    <Button variant="outline-info" size="sm">
                         <FaQuestionCircle /> Requests
                     </Button>
                 </LinkContainer>
             </ButtonGroup>
-            <Button onClick={() => setShow(true)} variant="primary">
+            <Button onClick={() => setShow(true)} variant="primary" size="sm">
                 <FaPlus /> Add New
             </Button>
         </Col>
@@ -125,6 +153,11 @@ const MangaList = () => {
                   </div>
                   <Card.Body className="d-flex flex-column">
                     <Card.Title className="text-truncate" title={manga.title}>{manga.title}</Card.Title>
+                    <div className="mb-2">
+                        {manga.genres && manga.genres.map(g => (
+                            <span key={g} className="badge bg-secondary me-1" style={{fontSize: '0.65rem'}}>{g}</span>
+                        ))}
+                    </div>
                     <Card.Text className="text-muted small text-truncate">
                       {manga.description || 'No description'}
                     </Card.Text>
@@ -167,9 +200,17 @@ const MangaList = () => {
                     onChange={(e) => setCoverFile(e.target.files[0])}
                     disabled={submitting}
                 />
-                <Form.Text className="text-muted">
-                    Recommended ratio 2:3 (e.g., 300x450px)
-                </Form.Text>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Genres (comma separated)</Form.Label>
+              <Form.Control 
+                type="text" 
+                value={genres} 
+                placeholder="Action, Isekai, Romance"
+                onChange={(e) => setGenres(e.target.value)} 
+                disabled={submitting}
+              />
             </Form.Group>
 
             <Form.Group className="mb-3">
