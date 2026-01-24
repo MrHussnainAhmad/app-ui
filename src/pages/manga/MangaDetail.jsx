@@ -22,7 +22,7 @@ const MangaDetail = () => {
   const [files, setFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [publishOption, setPublishOption] = useState('none'); // 'now', 'scheduled', 'none'
+  const [publishOption, setPublishOption] = useState('none'); 
 
   const fetchData = async () => {
     try {
@@ -51,13 +51,17 @@ const MangaDetail = () => {
     setPublishOption('none');
   };
 
+  const handleShowCreate = () => {
+      setEditMode(false);
+      setShow(true);
+  };
+
   const handleShowEdit = (chapter) => {
       setEditMode(true);
       setSelectedChapterId(chapter._id);
       setTitle(chapter.title);
       setChapterNumber(chapter.chapterNumber || '');
       
-      // Determine selected option for the radio buttons
       if (chapter.isPublished) {
           setPublishOption('now');
       } else if (chapter.releaseDate && new Date(chapter.releaseDate) > new Date()) {
@@ -103,12 +107,9 @@ const MangaDetail = () => {
         let uploadedFilesData = [];
         let pageCount = 0;
 
-        // 1. If files selected, Upload to Cloudinary DIRECTLY
         if (files.length > 0) {
-            // Get Signature
             const { data: signatureData } = await api.get('/manga/upload-signature'); 
             
-            // Upload in Parallel
             const totalFiles = files.length;
             let completed = 0;
 
@@ -123,13 +124,11 @@ const MangaDetail = () => {
             uploadedFilesData = await Promise.all(uploadPromises);
         }
 
-        // 2. Send Metadata to Backend
         const payload = {
             title,
             chapterNumber,
             pageCount,
             files: uploadedFilesData.length > 0 ? uploadedFilesData : undefined,
-            // Ensure boolean and string conversion for backend
             isPublished: publishOption === 'now' ? 'true' : 'false', 
             scheduleForLater: publishOption === 'scheduled' ? 'true' : 'false'
         };
@@ -193,7 +192,7 @@ const MangaDetail = () => {
           </thead>
           <tbody>
               {chapters.map(chapter => {
-                  const isTrulyPublished = chapter.isPublished && (chapter.releaseDate && new Date(chapter.releaseDate) <= new Date());
+                  const isTrulyPublished = chapter.isPublished || (chapter.releaseDate && new Date(chapter.releaseDate) <= new Date());
                   let releaseDateDisplay = 'N/A';
                   if (chapter.isPublished) {
                       releaseDateDisplay = 'Now';
@@ -259,9 +258,6 @@ const MangaDetail = () => {
                     accept="image/*,application/pdf"
                     disabled={uploading}
                 />
-                <Form.Text className="text-muted">
-                    {editMode ? 'Uploading new files will replace existing content.' : 'Select one PDF or multiple images.'}
-                </Form.Text>
             </Form.Group>
 
             <Form.Group className="mb-3">
@@ -296,17 +292,12 @@ const MangaDetail = () => {
                     onChange={(e) => setPublishOption(e.target.value)}
                     disabled={uploading}
                 />
-                <Form.Text className="text-muted">
-                    Select how and when this chapter should be released.
-                </Form.Text>
             </Form.Group>
-
 
             {uploading && (
                 <div className="mt-3">
                     <p>Uploading... {uploadProgress}%</p>
                     <ProgressBar now={uploadProgress} label={`${uploadProgress}%`} animated />
-                    <Alert variant="info" className="mt-2">Please do not close this window.</Alert>
                 </div>
             )}
 
