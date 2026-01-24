@@ -19,7 +19,7 @@ const MangaList = () => {
   const fetchMangas = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/');
+      const { data } = await api.get('/manga');
       setMangas(data);
     } catch (error) {
       toast.error('Error fetching mangas');
@@ -52,7 +52,7 @@ const MangaList = () => {
     }
 
     try {
-      await api.post('/', formData, {
+      await api.post('/manga', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
       });
       toast.success('Manga created');
@@ -67,7 +67,7 @@ const MangaList = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure? This will delete all chapters and files!')) {
       try {
-        await api.delete(`/${id}`);
+        await api.delete(`/manga/${id}`);
         toast.success('Manga deleted');
         fetchMangas();
       } catch (error) {

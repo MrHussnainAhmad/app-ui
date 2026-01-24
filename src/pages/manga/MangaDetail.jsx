@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Table, Button, Container, Row, Col, Modal, Form, ProgressBar, Alert } from 'react-bootstrap';
 import { FaTrash, FaArrowLeft, FaEdit } from 'react-icons/fa';
 import api from '../../utils/api';
+import axios from 'axios';
 import { toast } from 'react-toastify';
 
 const MangaDetail = () => {
@@ -24,10 +25,10 @@ const MangaDetail = () => {
 
   const fetchData = async () => {
     try {
-      const mangaRes = await api.get(`/${id}`);
+      const mangaRes = await api.get(`/manga/${id}`);
       setManga(mangaRes.data);
       
-      const chaptersRes = await api.get(`/${id}/chapters`);
+      const chaptersRes = await api.get(`/manga/${id}/chapters`);
       setChapters(chaptersRes.data);
     } catch (error) {
       toast.error('Error fetching data');
@@ -62,7 +63,29 @@ const MangaDetail = () => {
   };
 
   const handleFileChange = (e) => {
-      setFiles(e.target.files);
+      setFiles(Array.from(e.target.files));
+  };
+
+  const uploadToCloudinary = async (file, signatureData, folderPath, index) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('api_key', signatureData.apiKey);
+      formData.append('timestamp', signatureData.timestamp);
+      formData.append('signature', signatureData.signature);
+      // Skip folder to avoid signature issues on client upload
+      
+      const url = `https://api.cloudinary.com/v1_1/${signatureData.cloudName}/auto/upload`;
+      
+      const { data } = await axios.post(url, formData);
+      return {
+          path: data.secure_url,
+          publicId: data.public_id,
+          filename: file.name,
+          originalName: file.name,
+          mimetype: file.type,
+          size: file.size,
+          index: index
+      };
   };
 
   const handleSubmit = async (e) => {
@@ -70,38 +93,48 @@ const MangaDetail = () => {
     setUploading(true);
     setUploadProgress(0);
 
-    const formData = new FormData();
-    formData.append('title', title);
-    if (chapterNumber) formData.append('chapterNumber', chapterNumber);
-    
-    // Append files
-    for (let i = 0; i < files.length; i++) {
-        formData.append('content', files[i]);
-    }
-
     try {
-        const config = {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            },
-            onUploadProgress: (progressEvent) => {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                setUploadProgress(percentCompleted);
-            }
+        let uploadedFilesData = [];
+
+        // 1. If files selected, Upload to Cloudinary DIRECTLY
+        if (files.length > 0) {
+            // Get Signature
+            const { data: signatureData } = await api.get('/manga/upload-signature');
+            
+            // Upload in Parallel
+            const totalFiles = files.length;
+            let completed = 0;
+
+            const uploadPromises = files.map(async (file, index) => {
+                const result = await uploadToCloudinary(file, signatureData, '', index);
+                completed++;
+                setUploadProgress(Math.round((completed / totalFiles) * 100));
+                return result;
+            });
+
+            uploadedFilesData = await Promise.all(uploadPromises);
+        }
+
+        // 2. Send Metadata to Backend
+        const payload = {
+            title,
+            chapterNumber,
+            files: uploadedFilesData.length > 0 ? uploadedFilesData : undefined // Only send if new files
         };
 
         if (editMode) {
-            await api.put(`/chapter/${selectedChapterId}`, formData, config);
+            await api.put(`/manga/chapter/${selectedChapterId}`, payload);
             toast.success('Chapter updated');
         } else {
-            await api.post(`/${id}/chapter`, formData, config);
+            await api.post(`/manga/${id}/chapter`, payload);
             toast.success('Chapter created');
         }
 
         handleClose();
         fetchData();
     } catch (error) {
-        toast.error(error.response?.data?.message || 'Error uploading chapter');
+        console.error(error);
+        toast.error('Error uploading chapter: ' + (error.response?.data?.message || error.message));
         setUploading(false);
     }
   };
@@ -109,7 +142,7 @@ const MangaDetail = () => {
   const handleDelete = async (chapterId) => {
       if (window.confirm('Delete this chapter?')) {
           try {
-              await api.delete(`/chapter/${chapterId}`);
+              await api.delete(`/manga/chapter/${chapterId}`);
               toast.success('Chapter deleted');
               fetchData();
           } catch (error) {

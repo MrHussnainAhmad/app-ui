@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
         // Use the centralized 'api' instance. 
         // It already has the baseURL (/p/manga), so we just add '/auth/login'.
         // Route in backend: /p/manga/auth/login
-        const { data } = await api.post('/auth/login', {
+        const { data } = await api.post('/manga/auth/login', {
           username,
           password,
         });

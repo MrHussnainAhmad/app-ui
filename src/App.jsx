@@ -4,6 +4,8 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MangaList from './pages/manga/MangaList';
 import MangaDetail from './pages/manga/MangaDetail';
+import SuggestionList from './pages/interactions/SuggestionList';
+import RequestList from './pages/interactions/RequestList';
 import { useContext } from 'react';
 import AuthContext from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
@@ -45,6 +47,18 @@ function App() {
            <Route path="/manga/:id" element={
             <ProtectedRoute>
               <MangaDetail />
+            </ProtectedRoute>
+          } />
+
+          {/* Interaction Module */}
+          <Route path="/suggestions" element={
+            <ProtectedRoute>
+              <SuggestionList />
+            </ProtectedRoute>
+          } />
+          <Route path="/requests" element={
+            <ProtectedRoute>
+              <RequestList />
             </ProtectedRoute>
           } />
         </Routes>

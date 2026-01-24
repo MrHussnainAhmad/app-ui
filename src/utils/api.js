@@ -1,13 +1,12 @@
 import axios from 'axios';
 
 // RUNTIME DETECTION
-// If the browser URL contains 'localhost', use local backend.
-// Otherwise, assume we are on Vercel/Production and use the live backend.
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
+// Base points to the project root namespace "/p"
 const BASE_URL = isLocal 
-    ? 'http://localhost:5000/p/manga' 
-    : 'https://app-backend-alpha.vercel.app/p/manga';
+    ? 'http://localhost:5000/p' 
+    : 'https://app-backend-alpha.vercel.app/p';
 
 const api = axios.create({
   baseURL: BASE_URL,
