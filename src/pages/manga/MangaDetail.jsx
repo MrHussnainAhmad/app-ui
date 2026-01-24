@@ -22,16 +22,15 @@ const MangaDetail = () => {
   const [files, setFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
-  const [isPublished, setIsPublished] = useState(false); // New: Publish Now
-  const [scheduleForLater, setScheduleForLater] = useState(false); // New: Schedule for 5 AM PKT
+  const [isPublished, setIsPublished] = useState(false); 
+  const [scheduleForLater, setScheduleForLater] = useState(false);
 
   const fetchData = async () => {
     try {
-      const mangaRes = await api.get(`/${id}`);
+      const mangaRes = await api.get(`/manga/${id}`); // FIX: Added /manga prefix
       setManga(mangaRes.data);
       
-      // Admin sees ALL chapters
-      const chaptersRes = await api.get(`/${id}/chapters/all`);
+      const chaptersRes = await api.get(`/manga/${id}/chapters/all`); // FIX: Added /manga prefix
       setChapters(chaptersRes.data);
     } catch (error) {
       toast.error('Error fetching data');
@@ -107,7 +106,7 @@ const MangaDetail = () => {
         // 1. If files selected, Upload to Cloudinary DIRECTLY
         if (files.length > 0) {
             // Get Signature
-            const { data: signatureData } = await api.get('/manga/upload-signature');
+            const { data: signatureData } = await api.get('/manga/upload-signature'); 
             
             // Upload in Parallel
             const totalFiles = files.length;
@@ -130,15 +129,15 @@ const MangaDetail = () => {
             chapterNumber,
             pageCount,
             files: uploadedFilesData.length > 0 ? uploadedFilesData : undefined,
-            isPublished, // Send new status
-            scheduleForLater // Send schedule option
+            isPublished, 
+            scheduleForLater 
         };
 
         if (editMode) {
-            await api.put(`/manga/chapter/${selectedChapterId}`, payload);
+            await api.put(`/manga/chapter/${selectedChapterId}`, payload); // FIX: Added /manga prefix
             toast.success('Chapter updated');
         } else {
-            await api.post(`/manga/${id}/chapter`, payload);
+            await api.post(`/manga/${id}/chapter`, payload); // FIX: Added /manga prefix
             toast.success('Chapter created');
         }
 
@@ -154,11 +153,11 @@ const MangaDetail = () => {
   const handleDelete = async (chapterId) => {
       if (window.confirm('Delete this chapter?')) {
           try {
-              await api.delete(`/manga/chapter/${chapterId}`);
+              await api.delete(`/manga/chapter/${chapterId}`); // FIX: Added /manga prefix
               toast.success('Chapter deleted');
               fetchData();
           } catch (error) {
-              toast.error('Error deleting chapter');
+              toast.error('Error deleting manga');
           }
       }
   };
@@ -261,7 +260,7 @@ const MangaDetail = () => {
                     checked={isPublished}
                     onChange={(e) => {
                         setIsPublished(e.target.checked);
-                        if (e.target.checked) setScheduleForLater(false); // Can't schedule if immediate
+                        if (e.target.checked) setScheduleForLater(false); 
                     }}
                     disabled={uploading}
                 />
@@ -271,9 +270,9 @@ const MangaDetail = () => {
                     checked={scheduleForLater}
                     onChange={(e) => {
                         setScheduleForLater(e.target.checked);
-                        if (e.target.checked) setIsPublished(false); // Can't be immediate if scheduled
+                        if (e.target.checked) setIsPublished(false); 
                     }}
-                    disabled={uploading || isPublished} // Disable if already publishing immediately
+                    disabled={uploading || isPublished} 
                 />
                 <Form.Text className="text-muted">
                     If neither is selected, chapter will be unpublished.
