@@ -84,6 +84,7 @@ const MangaDetail = () => {
           originalName: file.name,
           mimetype: file.type,
           size: file.size,
+          pages: data.pages, // Capture page count if PDF
           index: index
       };
   };
@@ -95,6 +96,7 @@ const MangaDetail = () => {
 
     try {
         let uploadedFilesData = [];
+        let pageCount = 0;
 
         // 1. If files selected, Upload to Cloudinary DIRECTLY
         if (files.length > 0) {
@@ -107,6 +109,7 @@ const MangaDetail = () => {
 
             const uploadPromises = files.map(async (file, index) => {
                 const result = await uploadToCloudinary(file, signatureData, '', index);
+                if (result.pages && result.pages > 0) pageCount = result.pages; // Store if PDF
                 completed++;
                 setUploadProgress(Math.round((completed / totalFiles) * 100));
                 return result;
@@ -119,6 +122,7 @@ const MangaDetail = () => {
         const payload = {
             title,
             chapterNumber,
+            pageCount,
             files: uploadedFilesData.length > 0 ? uploadedFilesData : undefined // Only send if new files
         };
 
