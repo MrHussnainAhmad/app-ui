@@ -28,7 +28,8 @@ const MangaDetail = () => {
       const mangaRes = await api.get(`/manga/${id}`);
       setManga(mangaRes.data);
       
-      const chaptersRes = await api.get(`/manga/${id}/chapters`);
+      // Admin sees ALL chapters
+      const chaptersRes = await api.get(`/manga/${id}/chapters/all`);
       setChapters(chaptersRes.data);
     } catch (error) {
       toast.error('Error fetching data');
