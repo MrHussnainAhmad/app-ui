@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, Button, Container, Row, Col, Modal, Form, Spinner, ButtonGroup, InputGroup } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
 import { FaPlus, FaLightbulb, FaQuestionCircle } from 'react-icons/fa';
@@ -19,32 +19,36 @@ const MangaList = () => {
   const [coverFile, setCoverFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchGenres();
-    fetchMangas();
-  }, [selectedGenre]); // Refetch when filter changes
-
-  const fetchGenres = async () => {
+  const fetchGenres = useCallback(async () => {
       try {
           const { data } = await api.get('/manga/genres');
           setGenresList(data);
-      } catch (error) {
-          console.error(error);
+      } catch (err) {
+          console.error(err);
       }
-  };
+  }, []);
 
-  const fetchMangas = async () => {
+  const fetchMangas = useCallback(async () => {
     try {
       setLoading(true);
       const url = selectedGenre ? `/manga?genre=${encodeURIComponent(selectedGenre)}` : '/manga';
       const { data } = await api.get(url);
       setMangas(data);
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       toast.error('Error fetching mangas');
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedGenre]);
+
+  useEffect(() => {
+    fetchGenres();
+  }, [fetchGenres]);
+
+  useEffect(() => {
+    fetchMangas();
+  }, [fetchMangas]);
 
   const handleClose = () => {
       setShow(false);
@@ -75,8 +79,9 @@ const MangaList = () => {
       handleClose();
       fetchMangas();
       fetchGenres(); // Update list if new genre added
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Error creating manga');
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Error creating manga');
       setSubmitting(false);
     }
   };
@@ -87,7 +92,8 @@ const MangaList = () => {
         await api.delete(`/manga/${id}`);
         toast.success('Manga deleted');
         fetchMangas();
-      } catch (error) {
+      } catch (err) {
+        console.error(err);
         toast.error('Error deleting manga');
       }
     }

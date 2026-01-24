@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Table, Button, Container, Row, Col, Modal, Form, ProgressBar, Alert } from 'react-bootstrap';
 import { FaTrash, FaArrowLeft, FaEdit } from 'react-icons/fa';
@@ -24,21 +24,25 @@ const MangaDetail = () => {
   const [uploading, setUploading] = useState(false);
   const [publishOption, setPublishOption] = useState('none'); 
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
-      const mangaRes = await api.get(`/manga/${id}`); 
+      const [mangaRes, chaptersRes] = await Promise.all([
+        api.get(`/manga/${id}`),
+        // Optimized backend response: excludes heavy `files[]` by default and returns `filesCount`
+        api.get(`/manga/${id}/chapters/all`),
+      ]);
+
       setManga(mangaRes.data);
-      
-      const chaptersRes = await api.get(`/manga/${id}/chapters/all`); 
       setChapters(chaptersRes.data);
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       toast.error('Error fetching data');
     }
-  };
+  }, [id]);
 
   useEffect(() => {
     fetchData();
-  }, [id]);
+  }, [fetchData]);
 
   const handleClose = () => {
     setShow(false);
@@ -156,7 +160,8 @@ const MangaDetail = () => {
               await api.delete(`/manga/chapter/${chapterId}`); 
               toast.success('Chapter deleted');
               fetchData();
-          } catch (error) {
+          } catch (err) {
+              console.error(err);
               toast.error('Error deleting manga');
           }
       }
@@ -205,7 +210,7 @@ const MangaDetail = () => {
                           <td>{chapter.chapterNumber}</td>
                           <td>{chapter.title}</td>
                           <td>{chapter.contentType}</td>
-                          <td>{chapter.files?.length || 0}</td>
+                          <td>{chapter.filesCount ?? chapter.files?.length ?? 0}</td>
                           <td>{isTrulyPublished ? 'Yes' : 'No'}</td>
                           <td>{releaseDateDisplay}</td>
                           <td>

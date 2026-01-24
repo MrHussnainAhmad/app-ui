@@ -12,7 +12,8 @@ const RequestList = () => {
     try {
       const { data } = await api.get('/manga/interactions/requests');
       setRequests(data);
-    } catch (error) {
+    } catch (err) {
+      console.error(err);
       toast.error('Error fetching requests');
     } finally {
       setLoading(false);
@@ -29,7 +30,8 @@ const RequestList = () => {
         await api.delete(`/manga/interactions/requests/${id}`);
         toast.success('Deleted');
         fetchRequests();
-      } catch (error) {
+      } catch (err) {
+        console.error(err);
         toast.error('Error deleting');
       }
     }

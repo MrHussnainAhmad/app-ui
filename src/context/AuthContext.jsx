@@ -1,19 +1,20 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState } from 'react';
 import api from '../utils/api';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-      setUser(JSON.parse(userInfo));
+  const [user, setUser] = useState(() => {
+    try {
+      const userInfo = localStorage.getItem('userInfo');
+      return userInfo ? JSON.parse(userInfo) : null;
+    } catch {
+      return null;
     }
-    setLoading(false);
-  }, []);
+  });
+
+  // localStorage is synchronous, so we don't need an effect-driven loading phase.
+  const [loading] = useState(false);
 
   const login = async (username, password) => {
     try {
