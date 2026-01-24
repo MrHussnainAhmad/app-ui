@@ -10,6 +10,7 @@ const BASE_URL = isLocal
 
 const api = axios.create({
   baseURL: BASE_URL,
+  timeout: 60000, // Increased timeout to 60 seconds
 });
 
 api.interceptors.request.use(
