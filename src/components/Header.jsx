@@ -10,7 +10,7 @@ const Header = () => {
     <Navbar bg="dark" variant="dark" expand="lg" collapseOnSelect>
       <Container>
         <LinkContainer to="/">
-            <Navbar.Brand>Platform Admin</Navbar.Brand>
+          <Navbar.Brand>Platform Admin</Navbar.Brand>
         </LinkContainer>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
@@ -20,7 +20,7 @@ const Header = () => {
                 Logout
               </Button>
             ) : (
-                <Nav.Link href="/login">Login</Nav.Link>
+              <Nav.Link href="/login">Login</Nav.Link>
             )}
           </Nav>
         </Navbar.Collapse>

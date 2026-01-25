@@ -1,6 +1,6 @@
 import { Container, Row, Col, Card, Button } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
-import { FaBookOpen, FaFilm } from 'react-icons/fa';
+import { FaBookOpen, FaFilm, FaMoneyBillWave } from 'react-icons/fa';
 
 const Dashboard = () => {
   return (
@@ -18,6 +18,22 @@ const Dashboard = () => {
               </Card.Text>
               <LinkContainer to="/manga">
                 <Button variant="primary">Go to Manga</Button>
+              </LinkContainer>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Exchange Rates */}
+        <Col md={4}>
+          <Card className="h-100 text-center shadow-sm">
+            <Card.Body>
+              <FaMoneyBillWave size={50} className="mb-3 text-success" />
+              <Card.Title>Exchange Rates</Card.Title>
+              <Card.Text>
+                View and update currency exchange rates.
+              </Card.Text>
+              <LinkContainer to="/exchange-rates">
+                <Button variant="success">View Rates</Button>
               </LinkContainer>
             </Card.Body>
           </Card>

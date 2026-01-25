@@ -6,6 +6,7 @@ import MangaList from './pages/manga/MangaList';
 import MangaDetail from './pages/manga/MangaDetail';
 import SuggestionList from './pages/interactions/SuggestionList';
 import RequestList from './pages/interactions/RequestList';
+import ExchangeRates from './pages/ExchangeRates';
 import { useContext } from 'react';
 import AuthContext from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
@@ -13,9 +14,9 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
-  
-  if (loading) return null; 
-  
+
+  if (loading) return null;
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -30,7 +31,7 @@ function App() {
       <main>
         <Routes>
           <Route path="/login" element={<Login />} />
-          
+
           {/* Main Dashboard */}
           <Route path="/" element={
             <ProtectedRoute>
@@ -44,7 +45,7 @@ function App() {
               <MangaList />
             </ProtectedRoute>
           } />
-           <Route path="/manga/:id" element={
+          <Route path="/manga/:id" element={
             <ProtectedRoute>
               <MangaDetail />
             </ProtectedRoute>
@@ -59,6 +60,13 @@ function App() {
           <Route path="/manga/requests" element={
             <ProtectedRoute>
               <RequestList />
+            </ProtectedRoute>
+          } />
+
+          {/* General Module */}
+          <Route path="/exchange-rates" element={
+            <ProtectedRoute>
+              <ExchangeRates />
             </ProtectedRoute>
           } />
         </Routes>
