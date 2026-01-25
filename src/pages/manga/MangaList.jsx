@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Card, Button, Container, Row, Col, Modal, Form, Spinner, ButtonGroup, InputGroup } from 'react-bootstrap';
 import { LinkContainer } from 'react-router-bootstrap';
-import { FaPlus, FaLightbulb, FaQuestionCircle, FaStar } from 'react-icons/fa';
+import { FaPlus, FaLightbulb, FaQuestionCircle, FaStar, FaEdit } from 'react-icons/fa';
 import api from '../../utils/api';
 import { toast } from 'react-toastify';
 
@@ -19,6 +19,7 @@ const MangaList = () => {
   const [badge, setBadge] = useState('');
   const [coverFile, setCoverFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [editId, setEditId] = useState(null);
 
   const fetchGenres = useCallback(async () => {
     try {
@@ -59,9 +60,19 @@ const MangaList = () => {
     setBadge('');
     setCoverFile(null);
     setSubmitting(false);
+    setEditId(null);
   };
 
-  const handleCreate = async (e) => {
+  const handleEdit = (manga) => {
+    setEditId(manga._id);
+    setTitle(manga.title);
+    setDescription(manga.description || '');
+    setGenres(manga.genres ? manga.genres.join(', ') : '');
+    setBadge(manga.badge || '');
+    setShow(true);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
 
@@ -75,16 +86,23 @@ const MangaList = () => {
     }
 
     try {
-      await api.post('/manga', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      toast.success('Manga created');
+      if (editId) {
+        await api.put(`/manga/${editId}`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        toast.success('Manga updated');
+      } else {
+        await api.post('/manga', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        toast.success('Manga created');
+      }
       handleClose();
       fetchMangas();
-      fetchGenres(); // Update list if new genre added
+      fetchGenres();
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || 'Error creating manga');
+      toast.error(err.response?.data?.message || 'Error saving manga');
       setSubmitting(false);
     }
   };
@@ -179,6 +197,9 @@ const MangaList = () => {
                     {manga.description || 'No description'}
                   </Card.Text>
                   <div className="mt-auto d-flex gap-2">
+                    <Button variant="outline-primary" size="sm" onClick={() => handleEdit(manga)}>
+                      <FaEdit />
+                    </Button>
                     <LinkContainer to={`/manga/${manga._id}`}>
                       <Button variant="primary" size="sm" className="flex-grow-1">Manage</Button>
                     </LinkContainer>
@@ -194,9 +215,9 @@ const MangaList = () => {
       {/* Create Modal */}
       <Modal show={show} onHide={handleClose} backdrop="static">
         <Modal.Header closeButton={!submitting}>
-          <Modal.Title>Create New Manga</Modal.Title>
+          <Modal.Title>{editId ? 'Edit Manga' : 'Create New Manga'}</Modal.Title>
         </Modal.Header>
-        <Form onSubmit={handleCreate}>
+        <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <Form.Group className="mb-3">
               <Form.Label>Title</Form.Label>
