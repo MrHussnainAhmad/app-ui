@@ -170,6 +170,11 @@ const MangaList = () => {
                       <span key={g} className="badge bg-secondary me-1" style={{ fontSize: '0.65rem' }}>{g}</span>
                     ))}
                   </div>
+                  <div className="mb-2 text-warning d-flex align-items-center" style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>
+                    <FaStar className="me-1" />
+                    {manga.rating ? manga.rating.toFixed(1) : 'New'}
+                    <span className="text-muted ms-1 fw-normal">({manga.numReviews || 0} reviews)</span>
+                  </div>
                   <Card.Text className="text-muted small text-truncate">
                     {manga.description || 'No description'}
                   </Card.Text>
