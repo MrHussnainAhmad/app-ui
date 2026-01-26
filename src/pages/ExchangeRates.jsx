@@ -44,6 +44,13 @@ const ExchangeRates = () => {
 
     useEffect(() => {
         fetchRates();
+
+        // Auto-refresh every 30 seconds to keep UI in sync
+        const intervalId = setInterval(() => {
+            fetchRates();
+        }, 30000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     return (
