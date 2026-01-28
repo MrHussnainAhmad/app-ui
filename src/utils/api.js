@@ -4,9 +4,9 @@ import axios from 'axios';
 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
 // Base points to the project root namespace "/p"
-const BASE_URL = isLocal 
-    ? 'http://localhost:5000/p' 
-    : 'https://app-backend-alpha.vercel.app/p';
+const BASE_URL = isLocal
+  ? 'http://localhost:5000/p'
+  : 'https://app-backend-pgf9.vercel.app/p';
 
 const api = axios.create({
   baseURL: BASE_URL,
