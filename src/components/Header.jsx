@@ -12,6 +12,11 @@ const Header = () => {
         <LinkContainer to="/">
           <Navbar.Brand>Platform Admin</Navbar.Brand>
         </LinkContainer>
+        <Nav className="me-auto">
+          <LinkContainer to="/settings">
+            <Nav.Link>Settings</Nav.Link>
+          </LinkContainer>
+        </Nav>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">

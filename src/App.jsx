@@ -7,6 +7,7 @@ import MangaDetail from './pages/manga/MangaDetail';
 import SuggestionList from './pages/interactions/SuggestionList';
 import RequestList from './pages/interactions/RequestList';
 import ExchangeRates from './pages/ExchangeRates';
+import Settings from './pages/Settings';
 import { useContext } from 'react';
 import AuthContext from './context/AuthContext';
 import { ToastContainer } from 'react-toastify';
@@ -67,6 +68,13 @@ function App() {
           <Route path="/exchange-rates" element={
             <ProtectedRoute>
               <ExchangeRates />
+            </ProtectedRoute>
+          } />
+
+          {/* Settings Module */}
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Settings />
             </ProtectedRoute>
           } />
         </Routes>
