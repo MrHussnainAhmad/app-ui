@@ -7,7 +7,10 @@ import api from '../utils/api';
 const Settings = () => {
     const [config, setConfig] = useState({
         mangaAppVersion: '',
-        exchangeRatesAppVersion: ''
+        exchangeRatesAppVersion: '',
+        letscodeCppVersion: '',
+        letscodePythonBasicsVersion: '',
+        letscodePythonBasics2Version: ''
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -23,7 +26,10 @@ const Settings = () => {
             const { data } = await api.get('/config');
             setConfig({
                 mangaAppVersion: data.mangaAppVersion || '',
-                exchangeRatesAppVersion: data.exchangeRatesAppVersion || ''
+                exchangeRatesAppVersion: data.exchangeRatesAppVersion || '',
+                letscodeCppVersion: data.letscodeCppVersion || '',
+                letscodePythonBasicsVersion: data.letscodePythonBasicsVersion || '',
+                letscodePythonBasics2Version: data.letscodePythonBasics2Version || ''
             });
             setError(null);
         } catch (err) {
@@ -105,6 +111,48 @@ const Settings = () => {
                                     />
                                     <Form.Text className="text-muted">
                                         Version for the Exchange Rates application.
+                                    </Form.Text>
+                                </Form.Group>
+
+                                <Form.Group className="mb-3" controlId="letscodeCppVersion">
+                                    <Form.Label>Letscode C++ Version</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="letscodeCppVersion"
+                                        value={config.letscodeCppVersion}
+                                        onChange={handleChange}
+                                        placeholder="e.g. 1.0.0"
+                                    />
+                                    <Form.Text className="text-muted">
+                                        Version for the Letscode C++ application.
+                                    </Form.Text>
+                                </Form.Group>
+
+                                <Form.Group className="mb-3" controlId="letscodePythonBasicsVersion">
+                                    <Form.Label>Letscode Python Basics Version</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="letscodePythonBasicsVersion"
+                                        value={config.letscodePythonBasicsVersion}
+                                        onChange={handleChange}
+                                        placeholder="e.g. 1.0.0"
+                                    />
+                                    <Form.Text className="text-muted">
+                                        Version for the Letscode Python Basics application.
+                                    </Form.Text>
+                                </Form.Group>
+
+                                <Form.Group className="mb-4" controlId="letscodePythonBasics2Version">
+                                    <Form.Label>Letscode Python Basics 2 Version</Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        name="letscodePythonBasics2Version"
+                                        value={config.letscodePythonBasics2Version}
+                                        onChange={handleChange}
+                                        placeholder="e.g. 1.0.0"
+                                    />
+                                    <Form.Text className="text-muted">
+                                        Version for the Letscode Python Basics 2 application.
                                     </Form.Text>
                                 </Form.Group>
 
