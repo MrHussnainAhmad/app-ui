@@ -81,9 +81,9 @@ const Settings = () => {
             {error && <Alert variant="danger">{error}</Alert>}
 
             <Row>
-                <Col md={6}>
-                    <Card className="shadow-sm">
-                        <Card.Header className="bg-white fw-bold">App Versions</Card.Header>
+                <Col md={6} className="mb-4">
+                    <Card className="shadow-sm h-100">
+                        <Card.Header className="bg-primary text-white fw-bold">Main Applications</Card.Header>
                         <Card.Body>
                             <Form onSubmit={handleSubmit}>
                                 <Form.Group className="mb-3" controlId="mangaAppVersion">
@@ -114,6 +114,22 @@ const Settings = () => {
                                     </Form.Text>
                                 </Form.Group>
 
+                                <div className="d-grid">
+                                    <Button variant="primary" type="submit" disabled={saving}>
+                                        {saving ? <Spinner size="sm" animation="border" className="me-2" /> : <FaSave className="me-2" />}
+                                        Save Main Versions
+                                    </Button>
+                                </div>
+                            </Form>
+                        </Card.Body>
+                    </Card>
+                </Col>
+
+                <Col md={6} className="mb-4">
+                    <Card className="shadow-sm h-100">
+                        <Card.Header className="bg-success text-white fw-bold">LetsCode Education Series</Card.Header>
+                        <Card.Body>
+                            <Form onSubmit={handleSubmit}>
                                 <Form.Group className="mb-3" controlId="letscodeCppVersion">
                                     <Form.Label>Letscode C++ Version</Form.Label>
                                     <Form.Control
@@ -157,9 +173,9 @@ const Settings = () => {
                                 </Form.Group>
 
                                 <div className="d-grid">
-                                    <Button variant="primary" type="submit" disabled={saving}>
+                                    <Button variant="success" type="submit" disabled={saving}>
                                         {saving ? <Spinner size="sm" animation="border" className="me-2" /> : <FaSave className="me-2" />}
-                                        Save Changes
+                                        Save LetsCode Versions
                                     </Button>
                                 </div>
                             </Form>
