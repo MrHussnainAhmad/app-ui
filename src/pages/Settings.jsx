@@ -1,190 +1,232 @@
-import { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  Alert,
+  Button,
+  Card,
+  Col,
+  Container,
+  Form,
+  InputGroup,
+  Row,
+  Spinner,
+  Table,
+} from 'react-bootstrap';
 import { toast } from 'react-toastify';
-import { FaCogs, FaSave } from 'react-icons/fa';
+import { FaCopy, FaPlus, FaSave } from 'react-icons/fa';
 import api from '../utils/api';
 
 const Settings = () => {
-    const [config, setConfig] = useState({
-        mangaAppVersion: '',
-        exchangeRatesAppVersion: '',
-        letscodeCppVersion: '',
-        letscodePythonBasicsVersion: '',
-        letscodePythonBasics2Version: ''
-    });
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [error, setError] = useState(null);
+  const [apps, setApps] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [savingId, setSavingId] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
+  const [newAppName, setNewAppName] = useState('');
+  const [newAppVersion, setNewAppVersion] = useState('1.0.0');
 
-    useEffect(() => {
-        fetchConfig();
-    }, []);
+  const appBaseUrl = useMemo(() => {
+    const configured = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/p/manga';
+    return configured.replace(/\/p\/manga\/?$/, '');
+  }, []);
 
-    const fetchConfig = async () => {
-        try {
-            setLoading(true);
-            const { data } = await api.get('/config');
-            setConfig({
-                mangaAppVersion: data.mangaAppVersion || '',
-                exchangeRatesAppVersion: data.exchangeRatesAppVersion || '',
-                letscodeCppVersion: data.letscodeCppVersion || '',
-                letscodePythonBasicsVersion: data.letscodePythonBasicsVersion || '',
-                letscodePythonBasics2Version: data.letscodePythonBasics2Version || ''
-            });
-            setError(null);
-        } catch (err) {
-            console.error(err);
-            setError('Failed to fetch settings.');
-            toast.error('Failed to fetch settings.');
-        } finally {
-            setLoading(false);
-        }
-    };
+  const fetchApps = async () => {
+    try {
+      setLoading(true);
+      const { data } = await api.get('/p/config/apps');
+      setApps(data.map((item) => ({ ...item, draftVersion: item.version || '' })));
+      setError('');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to load apps.');
+      toast.error('Failed to load apps.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const handleChange = (e) => {
-        setConfig({
-            ...config,
-            [e.target.name]: e.target.value
-        });
-    };
+  useEffect(() => {
+    fetchApps();
+  }, []);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            setSaving(true);
-            await api.put('/config', config);
-            toast.success('Settings updated successfully!');
-        } catch (err) {
-            console.error(err);
-            toast.error('Failed to update settings.');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    if (loading) {
-        return (
-            <Container className="py-5 text-center">
-                <Spinner animation="border" variant="primary" />
-            </Container>
-        );
+  const handleCreateApp = async (e) => {
+    e.preventDefault();
+    if (!newAppName.trim()) {
+      toast.error('Please enter app name.');
+      return;
     }
 
-    return (
-        <Container className="py-4">
-            <Row className="mb-4">
-                <Col>
-                    <h1><FaCogs className="me-2" /> Settings</h1>
-                </Col>
-            </Row>
+    try {
+      setCreating(true);
+      await api.post('/p/config/apps', {
+        name: newAppName.trim(),
+        version: (newAppVersion || '1.0.0').trim(),
+      });
 
-            {error && <Alert variant="danger">{error}</Alert>}
+      toast.success('App created.');
+      setNewAppName('');
+      setNewAppVersion('1.0.0');
+      fetchApps();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to create app.');
+    } finally {
+      setCreating(false);
+    }
+  };
 
-            <Row>
-                <Col md={6} className="mb-4">
-                    <Card className="shadow-sm h-100">
-                        <Card.Header className="bg-primary text-white fw-bold">Main Applications</Card.Header>
-                        <Card.Body>
-                            <Form onSubmit={handleSubmit}>
-                                <Form.Group className="mb-3" controlId="mangaAppVersion">
-                                    <Form.Label>Manga App Version</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="mangaAppVersion"
-                                        value={config.mangaAppVersion}
-                                        onChange={handleChange}
-                                        placeholder="e.g. 1.0.0"
-                                    />
-                                    <Form.Text className="text-muted">
-                                        Version for the Manga application.
-                                    </Form.Text>
-                                </Form.Group>
-
-                                <Form.Group className="mb-4" controlId="exchangeRatesAppVersion">
-                                    <Form.Label>Exchange Rates App Version</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="exchangeRatesAppVersion"
-                                        value={config.exchangeRatesAppVersion}
-                                        onChange={handleChange}
-                                        placeholder="e.g. 1.2.0"
-                                    />
-                                    <Form.Text className="text-muted">
-                                        Version for the Exchange Rates application.
-                                    </Form.Text>
-                                </Form.Group>
-
-                                <div className="d-grid">
-                                    <Button variant="primary" type="submit" disabled={saving}>
-                                        {saving ? <Spinner size="sm" animation="border" className="me-2" /> : <FaSave className="me-2" />}
-                                        Save Main Versions
-                                    </Button>
-                                </div>
-                            </Form>
-                        </Card.Body>
-                    </Card>
-                </Col>
-
-                <Col md={6} className="mb-4">
-                    <Card className="shadow-sm h-100">
-                        <Card.Header className="bg-success text-white fw-bold">LetsCode Education Series</Card.Header>
-                        <Card.Body>
-                            <Form onSubmit={handleSubmit}>
-                                <Form.Group className="mb-3" controlId="letscodeCppVersion">
-                                    <Form.Label>Letscode C++ Version</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="letscodeCppVersion"
-                                        value={config.letscodeCppVersion}
-                                        onChange={handleChange}
-                                        placeholder="e.g. 1.0.0"
-                                    />
-                                    <Form.Text className="text-muted">
-                                        Version for the Letscode C++ application.
-                                    </Form.Text>
-                                </Form.Group>
-
-                                <Form.Group className="mb-3" controlId="letscodePythonBasicsVersion">
-                                    <Form.Label>Letscode Python Basics Version</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="letscodePythonBasicsVersion"
-                                        value={config.letscodePythonBasicsVersion}
-                                        onChange={handleChange}
-                                        placeholder="e.g. 1.0.0"
-                                    />
-                                    <Form.Text className="text-muted">
-                                        Version for the Letscode Python Basics application.
-                                    </Form.Text>
-                                </Form.Group>
-
-                                <Form.Group className="mb-4" controlId="letscodePythonBasics2Version">
-                                    <Form.Label>Letscode Python Basics 2 Version</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        name="letscodePythonBasics2Version"
-                                        value={config.letscodePythonBasics2Version}
-                                        onChange={handleChange}
-                                        placeholder="e.g. 1.0.0"
-                                    />
-                                    <Form.Text className="text-muted">
-                                        Version for the Letscode Python Basics 2 application.
-                                    </Form.Text>
-                                </Form.Group>
-
-                                <div className="d-grid">
-                                    <Button variant="success" type="submit" disabled={saving}>
-                                        {saving ? <Spinner size="sm" animation="border" className="me-2" /> : <FaSave className="me-2" />}
-                                        Save LetsCode Versions
-                                    </Button>
-                                </div>
-                            </Form>
-                        </Card.Body>
-                    </Card>
-                </Col>
-            </Row>
-        </Container>
+  const handleVersionChange = (id, value) => {
+    setApps((prev) =>
+      prev.map((app) => (app._id === id ? { ...app, draftVersion: value } : app))
     );
+  };
+
+  const handleSaveVersion = async (app) => {
+    try {
+      setSavingId(app._id);
+      await api.put(`/p/config/apps/${app._id}`, { version: app.draftVersion });
+      toast.success(`${app.name} version updated.`);
+      fetchApps();
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || 'Failed to update version.');
+    } finally {
+      setSavingId('');
+    }
+  };
+
+  const handleCopyApi = async (slug) => {
+    const endpoint = `${appBaseUrl}/p/config/apps/${slug}/version`;
+    try {
+      await navigator.clipboard.writeText(endpoint);
+      toast.success('Version API copied.');
+    } catch (err) {
+      console.error(err);
+      toast.error('Copy failed.');
+    }
+  };
+
+  if (loading) {
+    return (
+      <Container className="py-5 text-center">
+        <Spinner animation="border" />
+      </Container>
+    );
+  }
+
+  return (
+    <Container className="py-4">
+      <Row className="mb-4">
+        <Col>
+          <h1>App Versions</h1>
+          <p className="text-muted mb-0">
+            Create apps live here, update versions, and copy version-test APIs for client apps.
+          </p>
+        </Col>
+      </Row>
+
+      {error && <Alert variant="danger">{error}</Alert>}
+
+      <Row className="mb-4">
+        <Col lg={6}>
+          <Card className="shadow-sm">
+            <Card.Header className="fw-bold">Create App</Card.Header>
+            <Card.Body>
+              <Form onSubmit={handleCreateApp}>
+                <Form.Group className="mb-3">
+                  <Form.Label>App Name</Form.Label>
+                  <Form.Control
+                    value={newAppName}
+                    onChange={(e) => setNewAppName(e.target.value)}
+                    placeholder="e.g. My Learning App"
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Initial Version</Form.Label>
+                  <Form.Control
+                    value={newAppVersion}
+                    onChange={(e) => setNewAppVersion(e.target.value)}
+                    placeholder="e.g. 1.0.0"
+                  />
+                </Form.Group>
+
+                <Button type="submit" disabled={creating}>
+                  {creating ? <Spinner size="sm" animation="border" className="me-2" /> : <FaPlus className="me-2" />}
+                  Create App
+                </Button>
+              </Form>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
+
+      <Card className="shadow-sm">
+        <Card.Header className="fw-bold">Manage Versions</Card.Header>
+        <Card.Body className="p-0">
+          <Table responsive className="mb-0 align-middle">
+            <thead>
+              <tr>
+                <th>App Name</th>
+                <th>Slug</th>
+                <th>Version</th>
+                <th>Version API</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {apps.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="text-center py-4 text-muted">
+                    No apps yet. Create your first app above.
+                  </td>
+                </tr>
+              ) : (
+                apps.map((app) => (
+                  <tr key={app._id}>
+                    <td>{app.name}</td>
+                    <td>
+                      <code>{app.slug}</code>
+                    </td>
+                    <td style={{ minWidth: 200 }}>
+                      <Form.Control
+                        value={app.draftVersion || ''}
+                        onChange={(e) => handleVersionChange(app._id, e.target.value)}
+                        placeholder="1.0.0"
+                      />
+                    </td>
+                    <td style={{ minWidth: 340 }}>
+                      <InputGroup>
+                        <Form.Control
+                          readOnly
+                          value={`${appBaseUrl}/p/config/apps/${app.slug}/version`}
+                        />
+                        <Button variant="outline-secondary" onClick={() => handleCopyApi(app.slug)}>
+                          <FaCopy />
+                        </Button>
+                      </InputGroup>
+                    </td>
+                    <td>
+                      <Button
+                        onClick={() => handleSaveVersion(app)}
+                        disabled={savingId === app._id}
+                      >
+                        {savingId === app._id ? (
+                          <Spinner size="sm" animation="border" className="me-2" />
+                        ) : (
+                          <FaSave className="me-2" />
+                        )}
+                        Save
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
+        </Card.Body>
+      </Card>
+    </Container>
+  );
 };
 
 export default Settings;
