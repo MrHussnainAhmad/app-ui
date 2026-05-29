@@ -21,21 +21,26 @@ const checkLocalhost = async () => {
   }
 };
 
-// Determine BASE_URL based on localhost availability
-let BASE_URL = DEPLOY_URL;
+// Prefer localhost API when UI is running locally to avoid race conditions.
+const isLocalFrontend =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
-// Try localhost first on app startup
-checkLocalhost().then((isAvailable) => {
-  if (isAvailable) {
-    BASE_URL = LOCAL_URL;
-    api.defaults.baseURL = BASE_URL;
-  }
-});
+let BASE_URL = isLocalFrontend ? LOCAL_URL : DEPLOY_URL;
 
 const api = axios.create({
   baseURL: BASE_URL,
   timeout: 60000, // Increased timeout to 60 seconds
 });
+
+// If not local UI, we can still opportunistically switch to localhost when available.
+if (!isLocalFrontend) {
+  checkLocalhost().then((isAvailable) => {
+    if (isAvailable) {
+      api.defaults.baseURL = LOCAL_URL;
+    }
+  });
+}
 
 api.interceptors.request.use(
   (config) => {
