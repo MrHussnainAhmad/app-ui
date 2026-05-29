@@ -13,15 +13,17 @@ const ExchangeRates = () => {
     const fetchRates = async () => {
         try {
             setLoading(true);
-            // Use api utility if available, else fallback to direct axios
-            // Based on MangaList, api utility is used.
-            const response = await api.get('/general/exchange-rates');
-            setRates(response.data);
+            const response = await api.get('/general/exchange-rates', {
+                params: { _ts: Date.now() },
+                headers: { 'Cache-Control': 'no-cache' },
+            });
+            setRates(Array.isArray(response.data) ? response.data : []);
             setError(null);
         } catch (err) {
             console.error(err);
-            setError('Failed to fetch exchange rates.');
-            toast.error('Failed to fetch exchange rates.');
+            const message = err.response?.data?.message || 'Failed to fetch exchange rates.';
+            setError(message);
+            toast.error(message);
         } finally {
             setLoading(false);
         }
@@ -30,13 +32,19 @@ const ExchangeRates = () => {
     const handleForceRefresh = async () => {
         try {
             setRefreshing(true);
-            // api utility intercepts and adds the token from localStorage automatically
-            await api.post('/general/exchange-rates/refresh');
-            toast.success('Exchange rates updated successfully!');
-            await fetchRates(); // Re-fetch data after update
+            const refreshResponse = await api.post('/general/exchange-rates/refresh');
+            const updatedCount = refreshResponse?.data?.updatedCount;
+            toast.success(
+                Number.isFinite(updatedCount)
+                    ? `Exchange rates updated: ${updatedCount}`
+                    : 'Exchange rates updated successfully!'
+            );
+            await fetchRates();
         } catch (err) {
             console.error(err);
-            toast.error(err.response?.data?.message || 'Failed to force refresh rates.');
+            const message = err.response?.data?.message || 'Failed to force refresh rates.';
+            setError(message);
+            toast.error(message);
         } finally {
             setRefreshing(false);
         }
@@ -44,13 +52,6 @@ const ExchangeRates = () => {
 
     useEffect(() => {
         fetchRates();
-
-        // Auto-refresh every 30 seconds to keep UI in sync
-        const intervalId = setInterval(() => {
-            fetchRates();
-        }, 30000);
-
-        return () => clearInterval(intervalId);
     }, []);
 
     return (
@@ -64,7 +65,7 @@ const ExchangeRates = () => {
                     <Button
                         variant="primary"
                         onClick={handleForceRefresh}
-                        disabled={refreshing || loading}
+                        disabled={refreshing}
                     >
                         {refreshing ? <Spinner size="sm" animation="border" className="me-2" /> : <FaSync className="me-2" />}
                         {refreshing ? 'Updating...' : 'Force Refresh'}
