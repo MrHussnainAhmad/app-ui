@@ -19,8 +19,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (username, password) => {
     try {
         // Route in backend: /p/manga/auth/login
-        // Base URL should include /p/manga, so this path stays /auth/login.
-        const { data } = await api.post('/auth/login', {
+        // API base is /p, so this path is /manga/auth/login.
+        const { data } = await api.post('/manga/auth/login', {
           username,
           password,
         });

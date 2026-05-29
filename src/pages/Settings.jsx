@@ -25,14 +25,14 @@ const Settings = () => {
   const [newAppVersion, setNewAppVersion] = useState('1.0.0');
 
   const appBaseUrl = useMemo(() => {
-    const configured = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/p/manga';
-    return configured.replace(/\/p\/manga\/?$/, '');
+    const configured = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+    return configured.replace(/\/+$/, '').replace(/\/p(\/manga)?$/, '');
   }, []);
 
   const fetchApps = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/p/config/apps');
+      const { data } = await api.get('/config/apps');
       setApps(data.map((item) => ({ ...item, draftVersion: item.version || '' })));
       setError('');
     } catch (err) {
@@ -57,7 +57,7 @@ const Settings = () => {
 
     try {
       setCreating(true);
-      await api.post('/p/config/apps', {
+      await api.post('/config/apps', {
         name: newAppName.trim(),
         version: (newAppVersion || '1.0.0').trim(),
       });
@@ -83,7 +83,7 @@ const Settings = () => {
   const handleSaveVersion = async (app) => {
     try {
       setSavingId(app._id);
-      await api.put(`/p/config/apps/${app._id}`, { version: app.draftVersion });
+      await api.put(`/config/apps/${app._id}`, { version: app.draftVersion });
       toast.success(`${app.name} version updated.`);
       fetchApps();
     } catch (err) {

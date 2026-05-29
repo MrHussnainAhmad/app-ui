@@ -1,12 +1,20 @@
 import axios from 'axios';
 
-const LOCAL_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/p/manga';
-const DEPLOY_URL = import.meta.env.VITE_API_DEPLOY_URL || 'https://app-backend-kappa-sandy.vercel.app/';
+const normalizeApiBase = (url) => {
+  const cleaned = (url || '').trim().replace(/\/+$/, '');
+  if (!cleaned) return 'http://localhost:5000/p';
+  if (cleaned.endsWith('/p/manga')) return cleaned.replace(/\/manga$/, '');
+  if (cleaned.endsWith('/p')) return cleaned;
+  return `${cleaned}/p`;
+};
+
+const LOCAL_URL = normalizeApiBase(import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000');
+const DEPLOY_URL = normalizeApiBase(import.meta.env.VITE_API_DEPLOY_URL || 'https://app-backend-kappa-sandy.vercel.app');
 
 // Check if localhost is available
 const checkLocalhost = async () => {
   try {
-    await axios.get(LOCAL_URL.replace('/p/manga', '/health'), { timeout: 2000 });
+    await axios.get(LOCAL_URL.replace(/\/p$/, '/'), { timeout: 2000 });
     return true;
   } catch {
     return false;
