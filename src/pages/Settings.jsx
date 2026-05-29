@@ -25,7 +25,10 @@ const Settings = () => {
   const [newAppVersion, setNewAppVersion] = useState('1.0.0');
 
   const appBaseUrl = useMemo(() => {
-    const configured = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+    const configured =
+      import.meta.env.VITE_API_DEPLOY_URL ||
+      import.meta.env.VITE_API_BASE_URL ||
+      'https://app-backend-kappa-sandy.vercel.app';
     return configured.replace(/\/+$/, '').replace(/\/p(\/manga)?$/, '');
   }, []);
 
