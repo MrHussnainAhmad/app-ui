@@ -1,12 +1,28 @@
 import axios from 'axios';
 
-// RUNTIME DETECTION
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const LOCAL_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/p/manga';
+const DEPLOY_URL = import.meta.env.VITE_API_DEPLOY_URL || 'https://app-backend-kappa-sandy.vercel.app/';
 
-// Base points to the project root namespace "/p"
-const BASE_URL = isLocal
-  ? 'http://localhost:5000/p'
-  : 'https://app-backend-pgf9.vercel.app/p';
+// Check if localhost is available
+const checkLocalhost = async () => {
+  try {
+    await axios.get(LOCAL_URL.replace('/p/manga', '/health'), { timeout: 2000 });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// Determine BASE_URL based on localhost availability
+let BASE_URL = DEPLOY_URL;
+
+// Try localhost first on app startup
+checkLocalhost().then((isAvailable) => {
+  if (isAvailable) {
+    BASE_URL = LOCAL_URL;
+    api.defaults.baseURL = BASE_URL;
+  }
+});
 
 const api = axios.create({
   baseURL: BASE_URL,
